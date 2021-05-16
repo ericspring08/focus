@@ -83,7 +83,8 @@ class get_model():
         self.eyeCascade = cv2.CascadeClassifier(
             'haarcascade_eye_tree_eyeglasses.xml')
 
-    def predict(self, frame):
+    def predict(self, img_path):
+        frame = cv2.imread(img_path)
         sleepy_behaviour = eyes(frame, self.faceCascade, self.eyeCascade)
         outputs = ["sideway", "attentive", "yawing"]
 
@@ -111,8 +112,8 @@ class get_model():
 
 def main():
     final_model = get_model("hackethernet.h5")
-    img = cv2.imread("front.jpeg")
-    output = final_model.predict(img)
+
+    output = final_model.predict(img_path)
     print(output)
 
 
