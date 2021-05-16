@@ -41,31 +41,68 @@ def build_model(weights_path):
     return model
 
 
+def eyes(img, faceCascade, eyeCascade):
+    print(img.shape)
+    frame = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # Detect faces in the image
+    faces = faceCascade.detectMultiScale(
+        frame,
+        scaleFactor=1.1,
+        minNeighbors=5,
+        minSize=(30, 30),
+        # flags = cv2.CV_HAAR_SCALE_IMAGE
+    )
+    # print("Found {0} faces!".format(len(faces)))
+    if len(faces) > 0:
+        # Draw a rectangle around the faces
+        for (x, y, w, h) in faces:
+            cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        frame_tmp = img[faces[0][1]:faces[0][1] + faces[0]
+                        [3], faces[0][0]:faces[0][0] + faces[0][2]:1, :]
+        frame = frame[faces[0][1]:faces[0][1] + faces[0]
+                      [3], faces[0][0]:faces[0][0] + faces[0][2]:1]
+        eyes = eyeCascade.detectMultiScale(
+            frame,
+            scaleFactor=1.1,
+            minNeighbors=5,
+            minSize=(30, 30),
+            # flags = cv2.CV_HAAR_SCALE_IMAGE
+        )
+        if len(eyes) == 0:
+            return "sleepy"
+    return "not_sleepy"
+
+
 # In[8]:
 
 
 # In[9]:
 
-
 class get_model():
     def __init__(self, weights_path):
         self.model = build_model(weights_path)
+        self.faceCascade = cv2.CascadeClassifier(
+            'haarcascade_frontalface_alt.xml')
+        self.eyeCascade = cv2.CascadeClassifier(
+            'haarcascade_eye_tree_eyeglasses.xml')
 
     def predict(self, frame):
+        sleepy_behaviour = eyes(frame, self.faceCascade, self.eyeCascade)
         outputs = ["sideway", "attentive", "yawing"]
         frame = cv2.resize(frame, (224, 224))/255.0
         frame = np.expand_dims(frame, axis=0)
         output = self.model.predict(frame)
         index = np.argmax(output)
         attentive_score = output[0][1]
-        return outputs[index], attentive_score
 
+        return outputs[index], attentive_score, sleepy_behaviour
 
 # In[10]:
 
+
 def main():
     final_model = get_model("hackethernet.h5")
-    img = cv2.imread("side.jpeg")
+    img = cv2.imread("front.jpeg")
     output = final_model.predict(img)
     print(output)
 
